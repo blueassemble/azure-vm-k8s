@@ -28,7 +28,6 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout
@@ -60,8 +59,12 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -input=false
-        continue-on-error: true # PR 코멘트를 위해 plan 실패 시에도 계속 진행
+        run: terraform plan -no-color -input=false -out=tfplan \
+          && terraform show -no-color -json tfplan | tee plan.json \
+          && cat plan.json | jq . > formatted_plan.json \
+          && mv formatted_plan.json plan.json \
+          && echo "::set-output name=stdout::$(cat plan.json)"
+        continue-on-error: true
 
       - name: Add Plan to PR
         if: github.event_name == 'pull_request'

@@ -31,18 +31,23 @@ terraform {
   }
 }
 
-variable "subscription_id" {
-  type        = string
-  description = "Azure Subscription ID"
-}
 
 provider "azurerm" {
   resource_provider_registrations = "none"
-  subscription_id                 = var.subscription_id
   features {}
 }
 
 resource "azurerm_resource_group" "k8s-test" {
   name     = "rg-k8s-test-001"
   location = "eastus"
+}
+
+module "avm-res-network-virtualnetwork" {
+  source = "Azure/avm-res-network-virtualnetwork/azurerm"
+
+  address_space = var.virtual_network_address_space
+  location      = var.location
+  name          = var.virtual_network_name
+  parent_id     = azurerm_resource_group.k8s-test.id
+  subnets       = var.subnets
 }
