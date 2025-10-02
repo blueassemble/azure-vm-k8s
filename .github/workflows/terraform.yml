@@ -17,9 +17,13 @@ jobs:
   terraform:
     name: 'Terraform'
     runs-on: ubuntu-latest
+    environment:
+      # 배포 환경 이름을 지정합니다. 필요에 따라 수정하세요.
+      name: chkoo_azteam 
+
     env:
       # Terraform 백엔드 설정을 위한 환경 변수입니다.
-      # GitHub Repository Secrets에 아래 값들을 등록해야 합니다.
+      # GitHub Repository Environments Secrets에 아래 값들을 등록해야 합니다.
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -42,7 +46,13 @@ jobs:
             -backend-config="resource_group_name=${{ secrets.TF_STATE_RESOURCE_GROUP_NAME }}" \
             -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT_NAME }}" \
             -backend-config="container_name=${{ secrets.TF_STATE_CONTAINER_NAME }}" \
-            -backend-config="key=${{ secrets.TF_STATE_KEY }}"
+            -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
+            -no-color \
+            -input=false
+
+      - name: Terraform Fmt and Style
+        id: fmt
+        run: terraform fmt -check -diff -recursive -no-color
 
       - name: Terraform Validate
         id: validate
